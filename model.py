@@ -27,7 +27,7 @@ if not together_api_key:
 st.set_page_config(page_title="LawGPT")
 col1, col2, col3 = st.columns([1,4,1])
 with col2:
-    st.image("Black Bold Initial AI Business Logo.jpg")
+    st.image("./assets/Black Bold Initial AI Business Logo.jpg")
 st.markdown(
     """
      <style>
