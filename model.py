@@ -72,7 +72,7 @@ if "messages" not in st.session_state:
 if "memory" not in st.session_state:
     st.session_state["memory"] = ConversationBufferWindowMemory(k=2, memory_key="chat_history",return_messages=True) 
 
-embedings = HuggingFaceEmbeddings(model_name="nomic-ai/nomic-embed-text-v1",model_kwargs={"trust_remote_code":True,"revision":"289f532e14dbbbd5a04753fa58739e9ba766f3c7"})
+embedings = HuggingFaceEmbeddings(model_name="nomic-ai/nomic-embed-text-v1",model_kwargs={"trust_remote_code":True,"revision":"289f532e14dbbbd5a04753fa58739e9ba766f3c7",    "weights_only": True})
 db = FAISS.load_local("./ipc_vector_db", embedings, allow_dangerous_deserialization=True)
 db_retriever = db.as_retriever(search_type="similarity",search_kwargs={"k": 4})
 
