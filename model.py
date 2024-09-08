@@ -145,13 +145,13 @@ if input_prompt:
     with st.chat_message("user"):
         st.write(input_prompt)
 
-    st.session_state.messages.append({"role":"user","content":input_prompt})
+    st.session_state.messages.append({"role": "user", "content": input_prompt})
 
     classification = grade_question(input_prompt)
     
     if classification == "Indian Penal Code related":
         with st.chat_message("assistant"):
-            with st.status("Thinking 💡...",expanded=True):
+            with st.status("Thinking 💡...", expanded=True):
                 result = qa.invoke(input=input_prompt)
 
                 message_placeholder = st.empty()
@@ -162,16 +162,16 @@ if input_prompt:
                     time.sleep(0.02)
                     
                     message_placeholder.markdown(full_response + " ▌")
+                    
                 st.button('Reset All Chat 🗑️', on_click=reset_conversation)
 
-        st.session_state.messages.append({"role":"assistant","content":result["answer"]})
+        response = result["answer"]
     
     else:
         with st.chat_message("assistant"):
-            st.write("Hello! I specialize in providing information related to the Indian Penal Code. How can I assist you with IPC-related queries?")
+            response = "Hello! I specialize in providing information related to the Indian Penal Code. How can I assist you with IPC-related queries?"
 
-    st.session_state.messages.append({"role":"assistant","content":result["answer"] if classification == "Indian Penal Code related" else "Hello! I specialize in providing information related to the Indian Penal Code. How can I assist you with IPC-related queries?"})
-
+    st.session_state.messages.append({"role": "assistant", "content": response})
 
 
 
