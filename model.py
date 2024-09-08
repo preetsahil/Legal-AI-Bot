@@ -106,14 +106,19 @@ vector_store = load_vector_store()
 db_retriever = vector_store.as_retriever(search_type="similarity", search_kwargs={"k": 4})
 
 prompt_template = """<s>[INST] You are a legal chatbot specializing in Indian Penal Code queries. Your task is to:
-1. Determine if the question is related to the Indian Penal Code.
-2. If it is related, provide a detailed answer based on the given context and chat history.
-3. If it is not related, respond with: "I apologize, but I can only answer questions related to the Indian Penal Code. Could you please ask a question about Indian law or the penal code?"
+
+1. Provide accurate and concise information based on the user's questions about the Indian Penal Code.
+2. Strictly adhere to the given context and your knowledge of the Indian Penal Code.
+3. Offer brief, to-the-point responses that are relevant to the user's query.
+4. If a question falls outside the given context, rely on your own knowledge base without using the chat history.
+5. Do not generate your own questions and answers.
+6. Do not ask additional questions; focus solely on answering the user's query.
+7. If the question is not related to the Indian Penal Code, respond with: "I apologize, but I can only answer questions related to the Indian Penal Code. Could you please ask a question about Indian law or the penal code?"
+
 CONTEXT: {context}
 CHAT HISTORY: {chat_history}
 QUESTION: {question}
-ANSWER:
-</s>[INST]
+Provide your response based on the above instructions:</s>[INST]
 """
 
 prompt = PromptTemplate(template=prompt_template,
