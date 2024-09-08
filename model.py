@@ -105,7 +105,11 @@ if "memory" not in st.session_state:
 vector_store = load_vector_store()
 db_retriever = vector_store.as_retriever(search_type="similarity", search_kwargs={"k": 4})
 
-prompt_template = """<s>[INST] You are a legal chatbot specializing in Indian Penal Code queries. You must only provide answers related to the Indian Penal Code. If the question is unrelated to the Indian Penal Code, respond with: "I can only answer questions related to the Indian Penal Code." 
+prompt_template = """<s>[INST] You are a legal chatbot specializing in Indian Penal Code queries. You must only provide answers related to the Indian Penal Code. If the question is unrelated to the Indian Penal Code, respond with: "I can only answer questions related to the Indian Penal Code."
+You are an expert at routing a user question to a vectorstore.
+The vectorstore contains documents related to Indian Penal Code and The Indian Constitution. 
+It can answer questions related to Indian Law, IPC and the Constitution.
+Use vectorstore if the question is a legal query within the scope of IPC, Indian Law and the Indian Constitution.
 CONTEXT: {context}
 CHAT HISTORY: {chat_history}
 QUESTION: {question}
@@ -124,40 +128,34 @@ qa = ConversationalRetrievalChain.from_llm(
     memory=ConversationBufferWindowMemory(k=2, memory_key="chat_history",return_messages=True),
     combine_docs_chain_kwargs={'prompt': prompt}
 )
-def is_ipc_related(question):
-    ipc_keywords = ["IPC", "Indian Penal Code", "section", "crime", "law", "punishment", "court", "offense", "penalty", "judge","murder"]
-    return any(keyword.lower() in question.lower() for keyword in ipc_keywords)
-
 for message in st.session_state.get("messages", []):
     with st.chat_message(message.get("role")):
         st.write(message.get("content"))
 
 input_prompt = st.chat_input("Say something")
+
 if input_prompt:
     with st.chat_message("user"):
         st.write(input_prompt)
 
-    st.session_state.messages.append({"role": "user", "content": input_prompt})
+    st.session_state.messages.append({"role":"user","content":input_prompt})
 
-    if not is_ipc_related(input_prompt):
-        with st.chat_message("assistant"):
-            st.write("Hello! 😊 I hope you're doing well. I specialize in queries related to the Indian Penal Code. How can I assist you with that?")
-        st.session_state.messages.append({"role": "assistant", "content": "Hello! 😊 I hope you're doing well. I specialize in queries related to the Indian Penal Code. How can I assist you with that?"})
-    else:
-        with st.chat_message("assistant"):
-            with st.status("Thinking 💡...", expanded=True):
-                result = qa.invoke(input=input_prompt)
+    with st.chat_message("assistant"):
+        with st.status("Thinking 💡...",expanded=True):
+            result = qa.invoke(input=input_prompt)
 
-                message_placeholder = st.empty()
+            message_placeholder = st.empty()
 
-                full_response = "⚠️ **_Note: Information provided may be inaccurate._** \n\n\n"
-            for chunk in result["answer"]:
-                full_response += chunk
-                time.sleep(0.02)
-                message_placeholder.markdown(full_response + " ▌")
-            st.button('Reset All Chat 🗑️', on_click=reset_conversation)
+            full_response = "⚠️ **_Note: Information provided may be inaccurate._** \n\n\n"
+        for chunk in result["answer"]:
+            full_response+=chunk
+            time.sleep(0.02)
+            
+            message_placeholder.markdown(full_response+" ▌")
+        st.button('Reset All Chat 🗑️', on_click=reset_conversation)
 
-        st.session_state.messages.append({"role": "assistant", "content": result["answer"]})
+    st.session_state.messages.append({"role":"assistant","content":result["answer"]})
+
 
 
 
