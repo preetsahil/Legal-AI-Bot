@@ -8,6 +8,8 @@ from langchain.memory import ConversationBufferWindowMemory
 from langchain.chains import ConversationalRetrievalChain
 import streamlit as st
 import time
+from langchain_pinecone import PineconeVectorStore
+from pinecone import Pinecone
 
 load_dotenv()
 
@@ -17,9 +19,12 @@ import streamlit as st
 try:
     # Try to get the API key from Streamlit secrets
      together_api_key = st.secrets["together_ai"]["api_key"]
+     pinecone_api_key = st.secrets["pinecone_ai"]["api_key"]
+
 except:
     # If running locally, fall back to environment variable
     together_api_key = os.getenv("TOGETHER_API_KEY")
+    pinecone_api_key = os.getenv("PINECONE_API_KEY")
 
 if not together_api_key:
     st.error("API key not found. Please set it up in Streamlit secrets or .env file.")
@@ -72,9 +77,12 @@ if "messages" not in st.session_state:
 if "memory" not in st.session_state:
     st.session_state["memory"] = ConversationBufferWindowMemory(k=2, memory_key="chat_history",return_messages=True) 
 
-embedings = HuggingFaceEmbeddings(model_name="nomic-ai/nomic-embed-text-v1",model_kwargs={"trust_remote_code":True,"revision":"289f532e14dbbbd5a04753fa58739e9ba766f3c7",    "weights_only": True})
-db = FAISS.load_local("./ipc_vector_db", embedings, allow_dangerous_deserialization=True)
-db_retriever = db.as_retriever(search_type="similarity",search_kwargs={"k": 4})
+embeddings = HuggingFaceEmbeddings(model_name="nomic-ai/nomic-embed-text-v1",model_kwargs={"trust_remote_code":True,"revision":"289f532e14dbbbd5a04753fa58739e9ba766f3c7"})
+pc = Pinecone(api_key=pinecone_api_key)
+index_name="legalaivectors"
+index = pc.Index(index_name)
+vector_store = PineconeVectorStore(index=index, embedding=embeddings)
+db_retriever = vector_store.as_retriever(search_type="similarity",search_kwargs={"k": 4})
 
 prompt_template = """<s>[INST]This is a chat template and As a legal chat bot specializing in Indian Penal Code queries, your primary objective is to provide accurate and concise information based on the user's questions. Do not generate your own questions and answers. You will adhere strictly to the instructions provided, offering relevant context from the knowledge base while avoiding unnecessary details. Your responses will be brief, to the point, and in compliance with the established format. If a question falls outside the given context, you will refrain from utilizing the chat history and instead rely on your own knowledge base to generate an appropriate response. You will prioritize the user's query and refrain from posing additional questions. The aim is to deliver professional, precise, and contextually relevant information pertaining to the Indian Penal Code.
 CONTEXT: {context}
