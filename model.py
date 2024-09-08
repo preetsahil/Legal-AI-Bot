@@ -125,7 +125,7 @@ qa = ConversationalRetrievalChain.from_llm(
     combine_docs_chain_kwargs={'prompt': prompt}
 )
 def is_ipc_related(question):
-    ipc_keywords = ["IPC", "Indian Penal Code", "section", "crime", "law", "punishment", "court", "offense", "penalty", "judge"]
+    ipc_keywords = ["IPC", "Indian Penal Code", "section", "crime", "law", "punishment", "court", "offense", "penalty", "judge","murder"]
     return any(keyword.lower() in question.lower() for keyword in ipc_keywords)
 
 for message in st.session_state.get("messages", []):
