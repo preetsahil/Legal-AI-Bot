@@ -105,7 +105,10 @@ if "memory" not in st.session_state:
 vector_store = load_vector_store()
 db_retriever = vector_store.as_retriever(search_type="similarity", search_kwargs={"k": 4})
 
-prompt_template = """<s>[INST] You are a legal chatbot specializing in Indian Penal Code queries. You must only provide answers related to the Indian Penal Code. If the question is unrelated to the Indian Penal Code, respond with: "I can only answer questions related to the Indian Penal Code."
+prompt_template = """<s>[INST] You are a legal chatbot specializing in Indian Penal Code queries. Your task is to:
+1. Determine if the question is related to the Indian Penal Code.
+2. If it is related, provide a detailed answer based on the given context and chat history.
+3. If it is not related, respond with: "I apologize, but I can only answer questions related to the Indian Penal Code. Could you please ask a question about Indian law or the penal code?"
 CONTEXT: {context}
 CHAT HISTORY: {chat_history}
 QUESTION: {question}
