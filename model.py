@@ -116,11 +116,7 @@ if "memory" not in st.session_state:
 vector_store = load_vector_store()
 db_retriever = vector_store.as_retriever(search_type="similarity", search_kwargs={"k": 4})
 
-prompt_template = """<s>[INST] You are a legal chatbot specializing in Indian Penal Code queries. You must only provide answers related to the Indian Penal Code. If the question is unrelated to the Indian Penal Code, respond with: "I can only answer questions related to the Indian Penal Code."
-You are an expert at routing a user question to a vectorstore.
-The vectorstore contains documents related to Indian Penal Code and The Indian Constitution. 
-It can answer questions related to Indian Law, IPC and the Constitution.
-Use vectorstore if the question is a legal query within the scope of IPC, Indian Law and the Indian Constitution.
+prompt_template = """<s>[INST] You are a legal chatbot specializing in Indian Penal Code queries. You must only provide answers related to the Indian Penal Code. If the question is unrelated to the Indian Penal Code, respond with: "I can only answer questions related to the Indian Penal Code." You will prioritize the user's query and refrain from posing additional questions. The aim is to deliver professional, precise, and contextually relevant information pertaining to the Indian Penal Code.
 CONTEXT: {context}
 CHAT HISTORY: {chat_history}
 QUESTION: {question}
