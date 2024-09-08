@@ -142,7 +142,7 @@ if input_prompt:
     if not is_ipc_related(input_prompt):
         with st.chat_message("assistant"):
             st.write("Hello! 😊 I hope you're doing well. I specialize in queries related to the Indian Penal Code. How can I assist you with that?")
-        st.session_state.messages.append({"role": "assistant", "content": "I can only answer questions related to the Indian Penal Code."})
+        st.session_state.messages.append({"role": "assistant", "content": "Hello! 😊 I hope you're doing well. I specialize in queries related to the Indian Penal Code. How can I assist you with that?"})
     else:
         with st.chat_message("assistant"):
             with st.status("Thinking 💡...", expanded=True):
