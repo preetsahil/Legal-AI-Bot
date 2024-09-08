@@ -1,4 +1,3 @@
-from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.prompts import PromptTemplate
 from langchain_together import Together
@@ -10,11 +9,11 @@ import streamlit as st
 import time
 from langchain_pinecone import PineconeVectorStore
 from pinecone import Pinecone
+import os
+import streamlit as st
 
 load_dotenv()
 
-import os
-import streamlit as st
 
 try:
     # Try to get the API key from Streamlit secrets
@@ -28,6 +27,8 @@ except:
 
 if not together_api_key:
     st.error("API key not found. Please set it up in Streamlit secrets or .env file.")
+    st.stop()
+
 
 st.set_page_config(page_title="LawGPT")
 col1, col2, col3 = st.columns([1,4,1])
@@ -66,6 +67,29 @@ div.stButton > button:active {
   unsafe_allow_html=True,
 )
 
+@st.cache_resource
+def load_embeddings():
+    return HuggingFaceEmbeddings(
+        model_name="nomic-ai/nomic-embed-text-v1",
+        model_kwargs={"trust_remote_code":True, "revision":"289f532e14dbbbd5a04753fa58739e9ba766f3c7"}
+    )
+
+
+@st.cache_resource
+def load_vector_store(embeddings):
+    pc = Pinecone(api_key=pinecone_api_key)
+    index_name = "legalaivectors"
+    index = pc.Index(index_name)
+    return PineconeVectorStore(index=index, embedding=embeddings)
+
+@st.cache_resource
+def load_llm():
+    return Together(
+        model="mistralai/Mistral-7B-Instruct-v0.2",
+        temperature=0.5,
+        max_tokens=1024,
+        together_api_key=together_api_key
+    )
 
 def reset_conversation():
   st.session_state.messages = []
@@ -77,12 +101,12 @@ if "messages" not in st.session_state:
 if "memory" not in st.session_state:
     st.session_state["memory"] = ConversationBufferWindowMemory(k=2, memory_key="chat_history",return_messages=True) 
 
-embeddings = HuggingFaceEmbeddings(model_name="nomic-ai/nomic-embed-text-v1",model_kwargs={"trust_remote_code":True,"revision":"289f532e14dbbbd5a04753fa58739e9ba766f3c7"})
 pc = Pinecone(api_key=pinecone_api_key)
 index_name="legalaivectors"
 index = pc.Index(index_name)
-vector_store = PineconeVectorStore(index=index, embedding=embeddings)
-db_retriever = vector_store.as_retriever(search_type="similarity",search_kwargs={"k": 4})
+embeddings = load_embeddings()
+vector_store = load_vector_store(embeddings)
+db_retriever = vector_store.as_retriever(search_type="similarity", search_kwargs={"k": 4})
 
 prompt_template = """<s>[INST]This is a chat template and As a legal chat bot specializing in Indian Penal Code queries, your primary objective is to provide accurate and concise information based on the user's questions. Do not generate your own questions and answers. You will adhere strictly to the instructions provided, offering relevant context from the knowledge base while avoiding unnecessary details. Your responses will be brief, to the point, and in compliance with the established format. If a question falls outside the given context, you will refrain from utilizing the chat history and instead rely on your own knowledge base to generate an appropriate response. You will prioritize the user's query and refrain from posing additional questions. The aim is to deliver professional, precise, and contextually relevant information pertaining to the Indian Penal Code.
 CONTEXT: {context}
@@ -95,12 +119,7 @@ ANSWER:
 prompt = PromptTemplate(template=prompt_template,
                         input_variables=['context', 'question', 'chat_history'])
 
-llm = Together(
-    model="mistralai/Mistral-7B-Instruct-v0.2",
-    temperature=0.5,
-    max_tokens=1024,
-    together_api_key=together_api_key
-)
+llm = load_llm()
 
 qa = ConversationalRetrievalChain.from_llm(
     llm=llm,
@@ -135,3 +154,8 @@ if input_prompt:
         st.button('Reset All Chat 🗑️', on_click=reset_conversation)
 
     st.session_state.messages.append({"role":"assistant","content":result["answer"]})
+
+
+
+
+    
