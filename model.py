@@ -76,10 +76,11 @@ def load_embeddings():
 
 
 @st.cache_resource
-def load_vector_store(embeddings):
+def load_vector_store():
     pc = Pinecone(api_key=pinecone_api_key)
     index_name = "legalaivectors"
     index = pc.Index(index_name)
+    embeddings = load_embeddings()
     return PineconeVectorStore(index=index, embedding=embeddings)
 
 @st.cache_resource
@@ -101,11 +102,7 @@ if "messages" not in st.session_state:
 if "memory" not in st.session_state:
     st.session_state["memory"] = ConversationBufferWindowMemory(k=2, memory_key="chat_history",return_messages=True) 
 
-pc = Pinecone(api_key=pinecone_api_key)
-index_name="legalaivectors"
-index = pc.Index(index_name)
-embeddings = load_embeddings()
-vector_store = load_vector_store(embeddings)
+vector_store = load_vector_store()
 db_retriever = vector_store.as_retriever(search_type="similarity", search_kwargs={"k": 4})
 
 prompt_template = """<s>[INST]This is a chat template and As a legal chat bot specializing in Indian Penal Code queries, your primary objective is to provide accurate and concise information based on the user's questions. Do not generate your own questions and answers. You will adhere strictly to the instructions provided, offering relevant context from the knowledge base while avoiding unnecessary details. Your responses will be brief, to the point, and in compliance with the established format. If a question falls outside the given context, you will refrain from utilizing the chat history and instead rely on your own knowledge base to generate an appropriate response. You will prioritize the user's query and refrain from posing additional questions. The aim is to deliver professional, precise, and contextually relevant information pertaining to the Indian Penal Code.
