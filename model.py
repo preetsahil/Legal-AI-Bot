@@ -76,17 +76,6 @@ def load_embeddings():
     )
 
 @st.cache_resource
-def loadClassifier():
-    return pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
-
-def grade_question(question):
-    classifier = loadClassifier()
-    
-    labels = ["Indian Penal Code related", "Not related to Indian Penal Code"]
-    result = classifier(question, candidate_labels=labels)
-    return result["labels"][0]
-
-@st.cache_resource
 def load_vector_store():
     pc = Pinecone(api_key=pinecone_api_key)
     index_name = "legalaivectors"
@@ -141,37 +130,28 @@ for message in st.session_state.get("messages", []):
 
 input_prompt = st.chat_input("Say something")
 
+
 if input_prompt:
     with st.chat_message("user"):
         st.write(input_prompt)
 
-    st.session_state.messages.append({"role": "user", "content": input_prompt})
+    st.session_state.messages.append({"role":"user","content":input_prompt})
 
-    classification = grade_question(input_prompt)
-    
-    if classification == "Indian Penal Code related":
-        with st.chat_message("assistant"):
-            with st.status("Thinking 💡...", expanded=True):
-                result = qa.invoke(input=input_prompt)
+    with st.chat_message("assistant"):
+        with st.status("Thinking 💡...",expanded=True):
+            result = qa.invoke(input=input_prompt)
 
-                message_placeholder = st.empty()
+            message_placeholder = st.empty()
 
-                full_response = "⚠️ **_Note: Information provided may be inaccurate._** \n\n\n"
-                for chunk in result["answer"]:
-                    full_response += chunk
-                    time.sleep(0.02)
-                    
-                    message_placeholder.markdown(full_response + " ▌")
-                    
-                st.button('Reset All Chat 🗑️', on_click=reset_conversation)
+            full_response = "⚠️ **_Note: Information provided may be inaccurate._** \n\n\n"
+        for chunk in result["answer"]:
+            full_response+=chunk
+            time.sleep(0.02)
+            
+            message_placeholder.markdown(full_response+" ▌")
+        st.button('Reset All Chat 🗑️', on_click=reset_conversation)
 
-        response = result["answer"]
-    
-    else:
-        with st.chat_message("assistant"):
-            response = "Hello! I specialize in providing information related to the Indian Penal Code. How can I assist you with IPC-related queries?"
-
-    st.session_state.messages.append({"role": "assistant", "content": response})
+    st.session_state.messages.append({"role":"assistant","content":result["answer"]})
 
 
 
